@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MindCouncil AI — Multi-agent AI debate platform. Three AI agents debate, critique, and converge on the best decision." />
+  <title>MindCouncil AI — Where AI Minds Decide</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>" />
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav">
+  <div class="logo">
+    Mind<span class="logo-accent">Council</span>
+    <span class="logo-badge">AI</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('chat', this)">Council</button>
+    <button class="nav-tab" onclick="switchView('analytics', this)">Analytics</button>
+    <button class="nav-tab" onclick="switchView('pricing', this)">Pricing</button>
+    <button class="nav-tab" onclick="switchView('settings', this)">Settings</button>
+  </div>
+  <div class="nav-right">
+    <span class="plan-pill" id="plan-label">Free · 3 sessions/day</span>
+    <button class="btn-upgrade" onclick="switchView('pricing', document.querySelectorAll('.nav-tab')[2])">
+      Upgrade ↑
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     COUNCIL (CHAT) VIEW
+═══════════════════════════════════════ -->
+<div class="view active" id="view-chat">
+  <div class="chat-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="lsidebar">
+      <!-- Mode selector -->
+      <div class="ls-block">
+        <div class="sec-label">Mode</div>
+        <div class="mode-grid">
+          <button id="btn-quick"   class="mode-btn" onclick="setMode('quick', this)">
+            <span class="ico">⚡</span>Quick
+          </button>
+          <button id="btn-smart"   class="mode-btn" onclick="setMode('smart', this)">
+            <span class="ico">🧠</span>Smart
+          </button>
+          <button id="btn-council" class="mode-btn" onclick="setMode('council', this)">
+            <span class="ico">⚖️</span>Council
+          </button>
+        </div>
+      </div>
+
+      <!-- Agents -->
+      <div class="ls-block">
+        <div class="sec-label">Agents</div>
+        <div class="agent-item">
+          <div class="a-icon v">V<div class="a-dot off" id="dot-v"></div></div>
+          <div class="a-info">
+            <div class="a-name">Visionary</div>
+            <div class="a-role">Creative · bold</div>
+          </div>
+          <div class="a-score" id="score-v">—</div>
+        </div>
+        <div class="agent-item">
+          <div class="a-icon a">A<div class="a-dot off" id="dot-a"></div></div>
+          <div class="a-info">
+            <div class="a-name">Analyst</div>
+            <div class="a-role">Logic · data</div>
+          </div>
+          <div class="a-score" id="score-a">—</div>
+        </div>
+        <div class="agent-item" id="row-u">
+          <div class="a-icon u">U<div class="a-dot off" id="dot-u"></div></div>
+          <div class="a-info">
+            <div class="a-name">User Advocate</div>
+            <div class="a-role">Practical · UX</div>
+          </div>
+          <div class="a-score" id="score-u">—</div>
+        </div>
+      </div>
+
+      <!-- Session history -->
+      <div class="hist-scroll" id="hist-list">
+        <div class="sec-label" style="margin-bottom:10px">History</div>
+        <div class="hist-item current">
+          <div class="hist-label">SaaS idea for indie devs</div>
+          <div class="hist-meta">Council · 4 rounds</div>
+        </div>
+        <div class="hist-item">
+          <div class="hist-label">Zero-budget app marketing</div>
+          <div class="hist-meta">Smart · 2 agents</div>
+        </div>
+        <div class="hist-item">
+          <div class="hist-label">Best stack for chat app</div>
+          <div class="hist-meta">Quick · 1 agent</div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-row">
+        <div class="mc"><div class="mc-v" id="m-sess">3</div><div class="mc-l">Sessions</div></div>
+        <div class="mc"><div class="mc-v" id="m-ideas">12</div><div class="mc-l">Ideas</div></div>
+        <div class="mc"><div class="mc-v" id="m-rounds">8</div><div class="mc-l">Rounds</div></div>
+        <div class="mc"><div class="mc-v" id="m-eco" style="color:var(--green)">Low</div><div class="mc-l">Impact</div></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT -->
+    <main class="chat-main">
+      <div class="chat-scroll" id="chat-scroll">
+        <!-- Empty state -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">⚖️</div>
+          <div class="empty-h">Summon the Council</div>
+          <div class="empty-p">
+            Three AI agents debate, critique, and converge —
+            delivering decisions, not just answers.
+          </div>
+          <div class="chips">
+            <button class="chip" onclick="fillPrompt('Best SaaS idea for a solo developer in 2025')">SaaS for solo dev</button>
+            <button class="chip" onclick="fillPrompt('How to market an app with zero budget?')">App marketing</button>
+            <button class="chip" onclick="fillPrompt('What tech stack for a real-time chat app?')">Chat app stack</button>
+            <button class="chip" onclick="fillPrompt('Unique startup idea combining AI and sustainability')">AI + sustainability</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea
+            id="chat-input"
+            class="chat-textarea"
+            placeholder="Ask the Council anything…"
+            rows="1"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+            maxlength="500"
+          ></textarea>
+          <button class="send-btn" id="send-btn" onclick="submitQuery()" aria-label="Send message">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="input-footer">
+          <span id="mode-footer-label" style="color:var(--gold)">Council Mode · 3 agents · 4 rounds</span>
+          <span class="eco-row">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
+              <path d="M17 8C8 10 5.9 16.17 3.82 19.07M3 3s3-2 9 0 10 6 10 6"/>
+            </svg>
+            <span id="eco-footer-label">Eco routing on</span>
+          </span>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="rsidebar">
+      <!-- Round progress -->
+      <div class="rs-card">
+        <div class="rs-title">Round Progress</div>
+        <div class="prog-step" id="ps-1"><div class="prog-dot" id="pd-1">1</div>Idea generation</div>
+        <div class="prog-step" id="ps-2"><div class="prog-dot" id="pd-2">2</div>Cross-critique</div>
+        <div class="prog-step" id="ps-3"><div class="prog-dot" id="pd-3">3</div>Refinement</div>
+        <div class="prog-step" id="ps-4"><div class="prog-dot" id="pd-4">4</div>Final verdict</div>
+      </div>
+
+      <!-- Export -->
+      <div class="rs-card">
+        <div class="rs-title">Export Verdict</div>
+        <button class="export-link" onclick="openModal('linkedin')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+          LinkedIn post
+        </button>
+        <button class="export-link" onclick="openModal('pitch')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Pitch outline
+        </button>
+        <button class="export-link" onclick="openModal('summary')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          Copy summary
+        </button>
+        <button class="export-link" onclick="openModal('notion')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 6l8-4 8 4v12l-8 4-8-4V6z"/>
+          </svg>
+          Notion page
+        </button>
+      </div>
+
+      <!-- Sustainability -->
+      <div class="rs-card">
+        <div class="rs-title">Sustainability</div>
+        <div class="stat-line"><span>Compute</span><span class="stat-val" id="eco-co2">0.12g CO₂</span></div>
+        <div class="eco-bar-wrap"><div class="eco-bar-fill" id="eco-bar" style="width:15%"></div></div>
+        <div class="stat-line"><span>Mode</span><span class="stat-val" id="eco-mode-label" style="color:var(--green)">Eco</span></div>
+        <div class="stat-line"><span>Active agents</span><span class="stat-val" id="eco-agents-count">3</span></div>
+      </div>
+
+      <!-- Share -->
+      <div class="rs-card">
+        <div class="rs-title">Share</div>
+        <button class="export-link" onclick="showToast('Session link copied!')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+          </svg>
+          Copy session link
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ANALYTICS VIEW
+═══════════════════════════════════════ -->
+<div class="view" id="view-analytics">
+  <div class="page-wrap">
+    <div class="page-title">Usage Analytics</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="sc-val">47</div>
+        <div class="sc-label">Total sessions</div>
+        <div class="sc-delta" style="color:var(--green)">↑ 12 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-val">183</div>
+        <div class="sc-label">Ideas generated</div>
+        <div class="sc-delta" style="color:var(--green)">↑ 34 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-val">94%</div>
+        <div class="sc-label">Council mode usage</div>
+        <div class="sc-delta" style="color:var(--m1)">vs 6% other modes</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-val" style="color:var(--green)">2.1g</div>
+        <div class="sc-label">CO₂ saved</div>
+        <div class="sc-delta" style="color:var(--green)">↓ 18% vs last month</div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Sessions by topic</div>
+        <div class="bar-row"><span class="bar-lbl">Startup ideas</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--cv)"></div></div><span class="bar-num">34</span></div>
+        <div class="bar-row"><span class="bar-lbl">Marketing</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--ca)"></div></div><span class="bar-num">21</span></div>
+        <div class="bar-row"><span class="bar-lbl">Tech stack</span><div class="bar-track"><div class="bar-fill" style="width:32%;background:var(--cu)"></div></div><span class="bar-num">15</span></div>
+        <div class="bar-row"><span class="bar-lbl">Product</span><div class="bar-track"><div class="bar-fill" style="width:23%;background:var(--gold)"></div></div><span class="bar-num">11</span></div>
+        <div class="bar-row"><span class="bar-lbl">Other</span><div class="bar-track"><div class="bar-fill" style="width:13%;background:var(--m2)"></div></div><span class="bar-num">6</span></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Mode distribution</div>
+        <div class="donut-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--s2)" stroke-width="16"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--gold)" stroke-width="16"
+              stroke-dasharray="142 97" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--cv)" stroke-width="16"
+              stroke-dasharray="60 179" stroke-dashoffset="-142" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--ca)" stroke-width="16"
+              stroke-dasharray="37 202" stroke-dashoffset="-202" transform="rotate(-90 50 50)"/>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--gold)"></div><span>Council</span><span class="legend-pct">59%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--cv)"></div><span>Smart</span><span class="legend-pct">25%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--ca)"></div><span>Quick</span><span class="legend-pct">16%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Recent sessions</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Query</th><th>Mode</th><th>Agents</th><th>Rounds</th><th>Score</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SaaS idea for solo developer</td>
+            <td><span class="tag council">Council</span></td>
+            <td>3</td><td>4</td>
+            <td class="score-gold">9.2</td>
+            <td style="color:var(--m1)">Today</td>
+          </tr>
+          <tr>
+            <td>Zero-budget app marketing</td>
+            <td><span class="tag smart">Smart</span></td>
+            <td>2</td><td>2</td>
+            <td class="score-gold">8.7</td>
+            <td style="color:var(--m1)">Today</td>
+          </tr>
+          <tr>
+            <td>Best framework for real-time chat</td>
+            <td><span class="tag quick">Quick</span></td>
+            <td>1</td><td>1</td>
+            <td class="score-gold">7.9</td>
+            <td style="color:var(--m1)">Yesterday</td>
+          </tr>
+          <tr>
+            <td>AI + sustainability startup idea</td>
+            <td><span class="tag council">Council</span></td>
+            <td>3</td><td>4</td>
+            <td class="score-gold">9.5</td>
+            <td style="color:var(--m1)">Yesterday</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PRICING VIEW
+═══════════════════════════════════════ -->
+<div class="view" id="view-pricing">
+  <div class="pricing-wrap">
+    <div class="pricing-h">Simple, transparent pricing</div>
+    <div class="pricing-sub">Start free. Scale when ready. No surprises.</div>
+
+    <div class="billing-toggle">
+      <span class="t-label active" id="tl-m">Monthly</span>
+      <div class="toggle-track" id="billing-toggle" onclick="toggleBilling()">
+        <div class="toggle-thumb"></div>
+      </div>
+      <span class="t-label" id="tl-a">Annual</span>
+      <span class="save-pill" id="save-pill">Save 30%</span>
+    </div>
+
+    <div class="plans-grid">
+      <!-- FREE -->
+      <div class="plan-card">
+        <div class="plan-tier">Free</div>
+        <div class="plan-price">$0<span class="per"> / mo</span></div>
+        <div class="plan-desc">Explore the Council with no commitment.</div>
+        <ul class="plan-features">
+          <li><span class="f-check yes">✓</span>3 sessions per day</li>
+          <li><span class="f-check yes">✓</span>Quick &amp; Smart modes</li>
+          <li><span class="f-check yes">✓</span>Up to 2 agents</li>
+          <li><span class="f-check no">—</span>Council mode (3 agents)</li>
+          <li><span class="f-check no">—</span>Export options</li>
+          <li><span class="f-check no">—</span>Session history</li>
+          <li><span class="f-check no">—</span>Analytics dashboard</li>
+        </ul>
+        <button class="plan-cta" onclick="showToast('You are already on the Free plan')">Current plan</button>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan-card featured">
+        <div class="featured-badge">Most popular</div>
+        <div class="plan-tier">Pro</div>
+        <div class="plan-price" id="pro-price"><sup>$</sup>19<span class="per"> / mo</span></div>
+        <div class="plan-desc">For founders, creators &amp; product builders.</div>
+        <ul class="plan-features">
+          <li><span class="f-check yes">✓</span>Unlimited sessions</li>
+          <li><span class="f-check yes">✓</span>All modes + full Council</li>
+          <li><span class="f-check yes">✓</span>All 3 agents</li>
+          <li><span class="f-check yes">✓</span>Export to LinkedIn &amp; Notion</li>
+          <li><span class="f-check yes">✓</span>Full session history</li>
+          <li><span class="f-check yes">✓</span>Analytics dashboard</li>
+          <li><span class="f-check no">—</span>Team seats &amp; API access</li>
+        </ul>
+        <button class="plan-cta primary" onclick="showToast('Redirecting to checkout…')">Upgrade to Pro</button>
+      </div>
+
+      <!-- TEAM -->
+      <div class="plan-card">
+        <div class="plan-tier">Team</div>
+        <div class="plan-price" id="team-price"><sup>$</sup>49<span class="per"> / mo</span></div>
+        <div class="plan-desc">For startups &amp; fast-moving teams.</div>
+        <ul class="plan-features">
+          <li><span class="f-check yes">✓</span>Everything in Pro</li>
+          <li><span class="f-check yes">✓</span>5 team seats</li>
+          <li><span class="f-check yes">✓</span>Custom agent personas</li>
+          <li><span class="f-check yes">✓</span>REST API access</li>
+          <li><span class="f-check yes">✓</span>Priority support</li>
+          <li><span class="f-check yes">✓</span>Shared team history</li>
+          <li><span class="f-check yes">✓</span>Slack &amp; Notion integrations</li>
+        </ul>
+        <button class="plan-cta" onclick="showToast('Redirecting to checkout…')">Get Team plan</button>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <div class="faq-header">Frequently asked questions</div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">What is Council Mode?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Council Mode runs three AI agents — Visionary, Analyst, and User Advocate — through a 4-round structured debate. Each agent generates ideas, critiques the others, refines positions, and scores the final answer. The result is a synthesized verdict with full reasoning transparency.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Can I cancel anytime?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Yes. Cancel any time from Settings. Your plan stays active until the end of the billing period, then you return to the Free tier. No hidden fees or cancellation charges.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">How does API access work?<span class="faq-icon">+</span></div>
+        <div class="faq-a">Team plan members get a REST API key to trigger Council sessions programmatically, stream debate rounds into their own UI, and integrate verdicts into external tools and workflows.</div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">What AI models power the agents?<span class="faq-icon">+</span></div>
+        <div class="faq-a">All agents are powered by Claude (Anthropic). Each receives a distinct system prompt shaping its role and reasoning style. Our orchestration layer manages parallel execution, debate sequencing, and scoring entirely on the server — your API key is never exposed to the browser.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SETTINGS VIEW
+═══════════════════════════════════════ -->
+<div class="view" id="view-settings">
+  <div class="settings-layout">
+    <div class="settings-nav">
+      <div class="sec-label" style="padding:0 13px;margin-bottom:10px">Settings</div>
+      <button class="sn-item active" onclick="setSnav(this)">General</button>
+      <button class="sn-item" onclick="setSnav(this)">Agents</button>
+      <button class="sn-item" onclick="setSnav(this)">API &amp; integrations</button>
+      <button class="sn-item" onclick="setSnav(this)">Billing</button>
+      <button class="sn-item" onclick="setSnav(this)">Account</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section">
+        <div class="settings-section-title">Preferences</div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Default mode</div>
+            <div class="setting-desc">Which mode to use when starting a new session</div>
+          </div>
+          <select class="setting-select">
+            <option>Council (3 agents)</option>
+            <option>Smart (2 agents)</option>
+            <option>Quick (1 agent)</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Auto-save sessions</div>
+            <div class="setting-desc">Automatically save all Council sessions to history</div>
+          </div>
+          <div class="toggle2 on" onclick="this.classList.toggle('on')"><div class="toggle2-thumb"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Eco routing</div>
+            <div class="setting-desc">Use optimized model routing when full Council quality isn't needed</div>
+          </div>
+          <div class="toggle2 on" onclick="this.classList.toggle('on')"><div class="toggle2-thumb"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Show round progress</div>
+            <div class="setting-desc">Display the live debate round tracker in the right sidebar</div>
+          </div>
+          <div class="toggle2 on" onclick="this.classList.toggle('on')"><div class="toggle2-thumb"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Show agent scores</div>
+            <div class="setting-desc">Display individual agent confidence scores after verdicts</div>
+          </div>
+          <div class="toggle2 on" onclick="this.classList.toggle('on')"><div class="toggle2-thumb"></div></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">API &amp; integrations</div>
+        <div class="setting-row col">
+          <div>
+            <div class="setting-label">Your MindCouncil API key</div>
+            <div class="setting-desc">Use this to integrate Council sessions into your own apps (Team plan required)</div>
+          </div>
+          <div class="api-key-wrap">
+            <input id="api-key-input" class="api-key-input" value="mc_live_••••••••••••••••••••••••" readonly />
+            <button class="sm-btn" onclick="copyApiKey()">Copy</button>
+            <button class="sm-btn" onclick="showToast('New API key generated')">Regenerate</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Notion integration</div>
+            <div class="setting-desc">Auto-export verdicts to a Notion database</div>
+          </div>
+          <button class="sm-btn" onclick="showToast('Connect your Notion workspace to enable this')">Connect</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Slack notifications</div>
+            <div class="setting-desc">Post Council verdicts to a Slack channel automatically</div>
+          </div>
+          <button class="sm-btn" onclick="showToast('Connect your Slack workspace to enable this')">Connect</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Danger zone</div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Clear session history</div>
+            <div class="setting-desc">Permanently delete all saved Council sessions. This cannot be undone.</div>
+          </div>
+          <button class="danger-btn" onclick="showToast('Session history cleared')">Clear history</button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Delete account</div>
+            <div class="setting-desc">Permanently remove your account and all associated data</div>
+          </div>
+          <button class="danger-btn" onclick="showToast('Contact support@mindcouncil.ai to delete your account')">Delete account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     EXPORT MODAL
+═══════════════════════════════════════ -->
+<div class="modal-overlay" id="export-modal" onclick="handleOverlayClick(event)" role="dialog" aria-modal="true" aria-label="Export verdict">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Export verdict</div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-option selected" id="eo-linkedin" onclick="selectExportType('linkedin', this)">
+        <div class="eo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cv)" stroke-width="1.8">
+            <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="eo-title">LinkedIn post</div>
+          <div class="eo-desc">Formatted post with insights and CTA</div>
+        </div>
+      </div>
+      <div class="export-option" id="eo-pitch" onclick="selectExportType('pitch', this)">
+        <div class="eo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ca)" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="eo-title">Pitch outline</div>
+          <div class="eo-desc">Structured investor-ready brief</div>
+        </div>
+      </div>
+      <div class="export-option" id="eo-summary" onclick="selectExportType('summary', this)">
+        <div class="eo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cu)" stroke-width="1.8">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </div>
+        <div>
+          <div class="eo-title">Plain summary</div>
+          <div class="eo-desc">Copy to clipboard, paste anywhere</div>
+        </div>
+      </div>
+      <div class="export-option" id="eo-notion" onclick="selectExportType('notion', this)">
+        <div class="eo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8">
+            <path d="M4 6l8-4 8 4v12l-8 4-8-4V6z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="eo-title">Notion page</div>
+          <div class="eo-desc">Push directly to your Notion workspace</div>
+        </div>
+      </div>
+      <div class="export-preview" id="export-preview">Select a format above to preview the export…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-export" onclick="doExport()">Export &amp; copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast-el" role="status" aria-live="polite"></div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
